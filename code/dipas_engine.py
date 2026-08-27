@@ -436,7 +436,8 @@ class DIPASEngine:
             "cp": cp_data,
             "reynolds": reynolds,
             "evaluated_alpha_cp": cp_alpha,
-            "is_fallback": is_fallback
+            "is_fallback": is_fallback,
+            "diagnostic_info": getattr(self.xfoil, "last_diagnostic", "XFOIL Wrapper no disponible") if self.xfoil else "XFOIL Wrapper es None"
         }
 
     def detect_ansys_fluent(self):

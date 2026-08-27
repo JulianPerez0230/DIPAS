@@ -81,7 +81,7 @@ class XFoilWrapper:
 
     def _get_cmd(self):
         if os.name != 'nt' and shutil.which("xvfb-run"):
-            return ["xvfb-run", "-a", "-s", "-screen 0 800x600x16", self.xfoil_path]
+            return ["xvfb-run", "-a", self.xfoil_path]
         return [self.xfoil_path]
 
     def run_simulation(self, x, y_upper, y_lower, reynolds, alpha_start, alpha_end, alpha_step, file_prefix="temp"):
@@ -91,6 +91,7 @@ class XFoilWrapper:
         airfoil_file = os.path.abspath(self.write_airfoil_file(x, y_upper, y_lower, f"{file_prefix}_airfoil.dat"))
         polar_file = os.path.abspath(f"{file_prefix}_polar.txt")
         work_dir = os.path.dirname(polar_file)
+        self.last_diagnostic = ""
         
         # Si existe una polar anterior, la borramos para evitar interferencias
         if os.path.exists(polar_file):
@@ -121,12 +122,15 @@ class XFoilWrapper:
         cmd_str = "\n".join(commands) + "\n"
         
         # 2. Ejecutar XFOIL inyectando el flujo de comandos
+        diag_lines = [f"OS: {os.name}", f"Executable: {self.xfoil_path}"]
         try:
             env = os.environ.copy()
             if os.name != 'nt' and "DISPLAY" not in env:
                 env["DISPLAY"] = ":99"
 
             cmd = self._get_cmd()
+            diag_lines.append(f"Command: {' '.join(cmd)}")
+            
             process = subprocess.run(
                 cmd,
                 input=cmd_str,
@@ -137,22 +141,20 @@ class XFoilWrapper:
                 cwd=work_dir,
                 env=env
             )
-            import sys
-            print(f"[XFOIL Diagnostic] Executable: {self.xfoil_path}", flush=True)
-            print(f"[XFOIL Diagnostic] Command: {cmd}", flush=True)
-            print(f"[XFOIL Diagnostic] ReturnCode: {process.returncode}", flush=True)
+            diag_lines.append(f"ReturnCode: {process.returncode}")
             if process.stderr:
-                print(f"[XFOIL Diagnostic] STDERR: {process.stderr.strip()}", flush=True)
+                diag_lines.append(f"STDERR:\n{process.stderr.strip()}")
             if process.stdout:
-                print(f"[XFOIL Diagnostic] STDOUT Sample: {process.stdout[:300].strip()}", flush=True)
+                diag_lines.append(f"STDOUT:\n{process.stdout[:500].strip()}")
         except subprocess.TimeoutExpired:
-            print("Aviso: XFOIL alcanzó tiempo límite, extrayendo puntos calculados...", flush=True)
+            diag_lines.append("Exception: TimeoutExpired (35s)")
         except Exception as e:
-            print(f"Aviso: Error ejecutando subproceso XFOIL: {e}", flush=True)
+            diag_lines.append(f"Exception: {type(e).__name__} - {e}")
             
         # 3. Leer y parsear el archivo polar generado
         results = self._parse_polar_file(polar_file)
-        print(f"[XFOIL Diagnostic] Polar parsed successfully: {results is not None} (points: {len(results['alpha']) if results else 0})", flush=True)
+        diag_lines.append(f"Polar Exists: {os.path.exists(polar_file)}, Parsed: {results is not None} (pts: {len(results['alpha']) if results else 0})")
+        self.last_diagnostic = "\n".join(diag_lines)
         
         # Limpiamos los archivos temporales generados
         self._cleanup_temp_files(airfoil_file, polar_file)

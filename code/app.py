@@ -1396,6 +1396,11 @@ with tab_valid:
                 is_fb = xf_res.get("is_fallback", False)
                 solver_label = "Surrogate Multi-Fidelidad (Red Tensorial RANS/XFOIL)" if is_fb else "XFOIL 6.99 (Método de Paneles Viscosos eⁿ — Mark Drela, MIT)"
                 st.success(f"✅ **Simulación Convergida con Éxito** • **Motor Activo:** `{solver_label}`")
+                
+                diag = xf_res.get("diagnostic_info")
+                if diag:
+                    with st.expander("🔍 Ver Diagnóstico de Ejecución del Solver", expanded=False):
+                        st.code(diag)
                     
                 p_df = pd.DataFrame(xf_res["polar"])
                 
