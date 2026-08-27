@@ -1628,7 +1628,7 @@ with tab_valid:
                     st.plotly_chart(fig_drag, theme=None, use_container_width=True)
                     
                 with col_cp_plot:
-                    if xf_res["cp"] and len(xf_res["cp"]["x"]) > 0:
+                    if xf_res.get("cp") and isinstance(xf_res["cp"], dict) and "x" in xf_res["cp"] and len(xf_res["cp"]["x"]) > 0:
                         cp_df = pd.DataFrame(xf_res["cp"])
                         fig_cp = go.Figure()
                         fig_cp.add_trace(go.Scatter(

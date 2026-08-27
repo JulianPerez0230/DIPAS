@@ -404,10 +404,9 @@ class DIPASEngine:
                     
             polar_df = p_dict
             
-            # Generar distribución de Cp teórica/numérica consistente
+            # Generar distribución de Cp teórica/numérica consistente con formato estándar
             if cp_data is None:
                 x_pts = np.linspace(0.001, 1.0, 80)
-                camber = np.interp(x_pts, x, candidate["camber"])
                 thickness = np.interp(x_pts, x, candidate["thickness"])
                 cl_curr = float(candidate["surrogate_cl"]) if candidate.get("surrogate_cl") is not None else 1.0
                 
@@ -416,12 +415,17 @@ class DIPASEngine:
                 cp_l = 1.0 - (1.0 + 1.1 * thickness - 0.25 * cl_curr * np.sqrt((1.0 - x_pts) / x_pts))**2
                 cp_u = np.clip(cp_u, -5.5, 1.0)
                 cp_l = np.clip(cp_l, -1.8, 1.0)
+
+                x_comb = np.concatenate([np.flip(x_pts), x_pts])
+                y_u_interp = np.interp(x_pts, x, candidate["y_upper"])
+                y_l_interp = np.interp(x_pts, x, candidate["y_lower"])
+                y_comb = np.concatenate([np.flip(y_u_interp), y_l_interp])
+                cp_comb = np.concatenate([np.flip(cp_u), cp_l])
                 
                 cp_data = {
-                    "x_upper": x_pts.tolist(),
-                    "cp_upper": cp_u.tolist(),
-                    "x_lower": x_pts.tolist(),
-                    "cp_lower": cp_l.tolist()
+                    "x": x_comb.tolist(),
+                    "y": y_comb.tolist(),
+                    "Cp": cp_comb.tolist()
                 }
 
         return {

@@ -72,6 +72,11 @@ class XFoilWrapper:
                 
         return file_path
 
+    def _get_cmd(self):
+        if os.name != 'nt' and shutil.which("xvfb-run"):
+            return ["xvfb-run", "-a", self.xfoil_path]
+        return [self.xfoil_path]
+
     def run_simulation(self, x, y_upper, y_lower, reynolds, alpha_start, alpha_end, alpha_step, file_prefix="temp"):
         """
         Ejecuta la simulación en XFOIL y extrae la curva polar de coeficientes.
@@ -93,7 +98,7 @@ class XFoilWrapper:
             "pane",                  # Repanelar superficie para convergencia óptima
             "oper",                  # Entrar al menú de operaciones
             f"visc {reynolds}",      # Definir flujo viscoso y número de Reynolds
-            "iter 60",               # 60 iteraciones máximas por punto
+            "iter 80",               # 80 iteraciones máximas por punto
             "pacc",                  # Abrir acumulador de polar
             polar_file,              # Nombre del archivo donde se guardará la polar
             "",                      # Enter para confirmar configuración por defecto de acumulación
@@ -109,18 +114,24 @@ class XFoilWrapper:
             
         # 2. Ejecutar XFOIL inyectando el archivo de comandos
         try:
-            # Ejecutamos el proceso en segundo plano (silencioso)
+            env = os.environ.copy()
+            if os.name != 'nt' and "DISPLAY" not in env:
+                env["DISPLAY"] = ":99"
+
             with open(input_file, "r") as stdin_file:
                 process = subprocess.run(
-                    [self.xfoil_path],
+                    self._get_cmd(),
                     stdin=stdin_file,
                     stdout=subprocess.PIPE,
                     stderr=subprocess.PIPE,
                     text=True,
-                    timeout=25 # Tiempo límite de 25 segundos
+                    timeout=30,
+                    env=env
                 )
         except subprocess.TimeoutExpired:
             print("Aviso: XFOIL alcanzó tiempo límite, extrayendo puntos calculados...")
+        except Exception as e:
+            print(f"Aviso: Error ejecutando subproceso XFOIL: {e}")
             
         # 3. Leer y parsear el archivo polar generado (incluso si terminó por timeout)
         results = self._parse_polar_file(polar_file)
@@ -217,14 +228,19 @@ class XFoilWrapper:
             f.write("\n".join(commands) + "\n")
             
         try:
+            env = os.environ.copy()
+            if os.name != 'nt' and "DISPLAY" not in env:
+                env["DISPLAY"] = ":99"
+
             with open(input_file, "r") as stdin_file:
                 subprocess.run(
-                    [self.xfoil_path],
+                    self._get_cmd(),
                     stdin=stdin_file,
                     stdout=subprocess.PIPE,
                     stderr=subprocess.PIPE,
                     text=True,
-                    timeout=10
+                    timeout=15,
+                    env=env
                 )
         except Exception:
             self._cleanup_temp_files(airfoil_file, input_file, cp_file)
