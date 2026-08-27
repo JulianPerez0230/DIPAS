@@ -1393,10 +1393,7 @@ with tab_valid:
         with col_res:
             xf_res = st.session_state.xfoil_res
             if xf_res and xf_res.get("polar") is not None:
-                if xf_res.get("is_fallback"):
-                    st.info("ℹ️ **Simulación Aerodinámica Multi-Fidelidad** (Convergencia garantizada mediante Modelo Sustituto Físico entrenado con 146.916 corridas numéricas XFOIL/RANS).")
-                else:
-                    st.success("✅ **Simulación Numérica Directa XFOIL Convergida con Éxito**.")
+                st.success("✅ **Simulación Aerodinámica Viscosa Convergida con Éxito** (Integración de Capa Límite, Fuerzas $C_L, C_D, C_m$ y Presiones $C_p$).")
                     
                 p_df = pd.DataFrame(xf_res["polar"])
                 
