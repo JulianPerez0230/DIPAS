@@ -1387,13 +1387,16 @@ with tab_valid:
                             eval_alpha=alpha_eval
                         )
                         st.session_state.xfoil_res = res
-                        st.rerun()
+                        if res is None or res.get("polar") is None or len(res["polar"]) == 0:
+                            st.warning("XFOIL completó la rutina pero no convergió en los ángulos solicitados. Prueba reducir el rango de α o aumentar el número de Reynolds.")
+                        else:
+                            st.success("Simulación XFOIL completada con éxito.")
                     except Exception as e:
                         st.error(f"Error en la ejecución de XFOIL: {e}")
                         
         with col_res:
             xf_res = st.session_state.xfoil_res
-            if xf_res and xf_res["polar"]:
+            if xf_res and xf_res.get("polar") is not None and len(xf_res["polar"]) > 0:
                 p_df = pd.DataFrame(xf_res["polar"])
                 
                 # Valores estimados del perfil decodificado
