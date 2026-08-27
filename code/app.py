@@ -1064,7 +1064,7 @@ with tab_geom:
         st.markdown("""
         <div class="dipas-card">
             <h4 style="color: var(--academic-navy); font-family: 'STIX Two Text', serif; margin-top: 0; font-size: 1.05rem;">
-                🎯 Arquetipos de Diseño Especializados
+                Arquetipos de Diseño Especializados
             </h4>
             <p style="font-size: 0.80rem; color: var(--text-secondary); margin-bottom: 2px;">
                 5 variantes físicas optimizadas sobre el manifold latente CVAE.
