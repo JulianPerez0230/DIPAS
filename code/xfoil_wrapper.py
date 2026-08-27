@@ -108,38 +108,33 @@ class XFoilWrapper:
             "quit"                   # Salir de XFOIL
         ]
         
-        # Guardamos los comandos en un archivo de texto
-        with open(input_file, "w") as f:
-            f.write("\n".join(commands) + "\n")
-            
-        # 2. Ejecutar XFOIL inyectando el archivo de comandos
+        cmd_str = "\n".join(commands) + "\n"
+        
+        # 2. Ejecutar XFOIL inyectando el flujo de comandos
         try:
             env = os.environ.copy()
             if os.name != 'nt' and "DISPLAY" not in env:
                 env["DISPLAY"] = ":99"
 
-            with open(input_file, "r") as stdin_file:
-                process = subprocess.run(
-                    self._get_cmd(),
-                    stdin=stdin_file,
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE,
-                    text=True,
-                    timeout=30,
-                    env=env
-                )
+            process = subprocess.run(
+                self._get_cmd(),
+                input=cmd_str,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+                timeout=30,
+                env=env
+            )
         except subprocess.TimeoutExpired:
             print("Aviso: XFOIL alcanzó tiempo límite, extrayendo puntos calculados...")
         except Exception as e:
             print(f"Aviso: Error ejecutando subproceso XFOIL: {e}")
             
-        # 3. Leer y parsear el archivo polar generado (incluso si terminó por timeout)
+        # 3. Leer y parsear el archivo polar generado
         results = self._parse_polar_file(polar_file)
         
-        # Limpiamos los archivos temporales generados para no ensuciar la carpeta
-        self._cleanup_temp_files(airfoil_file, input_file, polar_file)
-        
-        return results
+        # Limpiamos los archivos temporales generados
+        self._cleanup_temp_files(airfoil_file, polar_file)
         
         return results
 
@@ -224,30 +219,27 @@ class XFoilWrapper:
             "quit"
         ]
         
-        with open(input_file, "w") as f:
-            f.write("\n".join(commands) + "\n")
-            
+        cmd_str = "\n".join(commands) + "\n"
         try:
             env = os.environ.copy()
             if os.name != 'nt' and "DISPLAY" not in env:
                 env["DISPLAY"] = ":99"
 
-            with open(input_file, "r") as stdin_file:
-                subprocess.run(
-                    self._get_cmd(),
-                    stdin=stdin_file,
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE,
-                    text=True,
-                    timeout=15,
-                    env=env
-                )
+            subprocess.run(
+                self._get_cmd(),
+                input=cmd_str,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+                timeout=15,
+                env=env
+            )
         except Exception:
-            self._cleanup_temp_files(airfoil_file, input_file, cp_file)
+            self._cleanup_temp_files(airfoil_file, cp_file)
             return None
             
         cp_data = self._parse_cp_file(cp_file)
-        self._cleanup_temp_files(airfoil_file, input_file, cp_file)
+        self._cleanup_temp_files(airfoil_file, cp_file)
         return cp_data
 
     def _parse_cp_file(self, cp_path):
