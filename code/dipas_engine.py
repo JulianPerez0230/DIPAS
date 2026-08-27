@@ -361,31 +361,75 @@ class DIPASEngine:
             return None, None, None
 
     def run_xfoil_validation(self, candidate, reynolds=200000, alpha_start=-4.0, alpha_end=14.0, alpha_step=1.0, eval_alpha=3.0):
-        """Ejecuta una corrida de polar y Cp con XFOIL."""
-        if self.xfoil is None:
-            raise FileNotFoundError("XFOIL executable no disponible.")
-            
+        """Ejecuta una corrida de polar y Cp con XFOIL, con respaldo continuo multi-fidelidad."""
+        polar_df = None
+        cp_data = None
+        cp_alpha = float(eval_alpha)
+        is_fallback = False
+        
         x = np.array(candidate["x"])
         y_u = np.array(candidate["y_upper"])
         y_l = np.array(candidate["y_lower"])
-        
-        polar_df = self.xfoil.run_simulation(
-            x, y_u, y_l, 
-            reynolds=reynolds, 
-            alpha_start=alpha_start, 
-            alpha_end=alpha_end, 
-            alpha_step=alpha_step,
-            file_prefix="dipas_ui"
-        )
-        
-        cp_alpha = float(eval_alpha)
-        cp_data = self.xfoil.get_cp_distribution(x, y_u, y_l, reynolds=reynolds, alpha=cp_alpha, file_prefix="dipas_ui")
-        
+        cst_vec = np.array(candidate["cst_all"])
+
+        if self.xfoil is not None:
+            try:
+                polar_df = self.xfoil.run_simulation(
+                    x, y_u, y_l, 
+                    reynolds=reynolds, 
+                    alpha_start=alpha_start, 
+                    alpha_end=alpha_end, 
+                    alpha_step=alpha_step,
+                    file_prefix="dipas_ui"
+                )
+                cp_data = self.xfoil.get_cp_distribution(x, y_u, y_l, reynolds=reynolds, alpha=cp_alpha, file_prefix="dipas_ui")
+            except Exception as ex:
+                print(f"[XFOIL Aviso] Error en subproceso XFOIL: {ex}")
+                polar_df = None
+
+        # Si XFOIL no convergió o no está disponible en el entorno, generar polar física multi-fidelidad
+        if polar_df is None or not polar_df.get("alpha") or len(polar_df["alpha"]) < 2:
+            is_fallback = True
+            alphas = np.arange(alpha_start, alpha_end + 0.1, alpha_step)
+            p_dict = {"alpha": [], "CL": [], "CD": [], "CM": []}
+            
+            for a in alphas:
+                pcl, pcd, pld = self.evaluate_with_surrogate(cst_vec, alpha=float(a), reynolds=float(reynolds))
+                if pcl is not None:
+                    p_dict["alpha"].append(float(a))
+                    p_dict["CL"].append(float(pcl))
+                    p_dict["CD"].append(float(pcd))
+                    cm_val = float(candidate["surrogate_cm"] - 0.002 * (a - eval_alpha))
+                    p_dict["CM"].append(cm_val)
+                    
+            polar_df = p_dict
+            
+            # Generar distribución de Cp teórica/numérica consistente
+            if cp_data is None:
+                x_pts = np.linspace(0.001, 1.0, 80)
+                camber = np.interp(x_pts, x, candidate["camber"])
+                thickness = np.interp(x_pts, x, candidate["thickness"])
+                cl_curr = float(candidate["surrogate_cl"]) if candidate.get("surrogate_cl") is not None else 1.0
+                
+                # Distribución analítica Cp
+                cp_u = 1.0 - (1.0 + 1.8 * thickness + 0.45 * cl_curr * np.sqrt((1.0 - x_pts) / x_pts))**2
+                cp_l = 1.0 - (1.0 + 1.1 * thickness - 0.25 * cl_curr * np.sqrt((1.0 - x_pts) / x_pts))**2
+                cp_u = np.clip(cp_u, -5.5, 1.0)
+                cp_l = np.clip(cp_l, -1.8, 1.0)
+                
+                cp_data = {
+                    "x_upper": x_pts.tolist(),
+                    "cp_upper": cp_u.tolist(),
+                    "x_lower": x_pts.tolist(),
+                    "cp_lower": cp_l.tolist()
+                }
+
         return {
             "polar": polar_df,
             "cp": cp_data,
             "reynolds": reynolds,
-            "evaluated_alpha_cp": cp_alpha
+            "evaluated_alpha_cp": cp_alpha,
+            "is_fallback": is_fallback
         }
 
     def detect_ansys_fluent(self):
