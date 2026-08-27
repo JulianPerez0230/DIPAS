@@ -81,7 +81,7 @@ class XFoilWrapper:
 
     def _get_cmd(self):
         if os.name != 'nt' and shutil.which("xvfb-run"):
-            return ["xvfb-run", "-a", self.xfoil_path]
+            return ["xvfb-run", "-a", "-s", "-screen 0 800x600x16", self.xfoil_path]
         return [self.xfoil_path]
 
     def run_simulation(self, x, y_upper, y_lower, reynolds, alpha_start, alpha_end, alpha_step, file_prefix="temp"):
@@ -123,15 +123,23 @@ class XFoilWrapper:
             if os.name != 'nt' and "DISPLAY" not in env:
                 env["DISPLAY"] = ":99"
 
+            cmd = self._get_cmd()
             process = subprocess.run(
-                self._get_cmd(),
+                cmd,
                 input=cmd_str,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 text=True,
-                timeout=30,
+                timeout=35,
                 env=env
             )
+            print(f"[XFOIL Diagnostic] Executable: {self.xfoil_path}")
+            print(f"[XFOIL Diagnostic] Command: {cmd}")
+            print(f"[XFOIL Diagnostic] ReturnCode: {process.returncode}")
+            if process.stderr:
+                print(f"[XFOIL Diagnostic] STDERR: {process.stderr.strip()}")
+            if process.stdout:
+                print(f"[XFOIL Diagnostic] STDOUT Sample: {process.stdout[:300].strip()}")
         except subprocess.TimeoutExpired:
             print("Aviso: XFOIL alcanzó tiempo límite, extrayendo puntos calculados...")
         except Exception as e:
@@ -139,6 +147,7 @@ class XFoilWrapper:
             
         # 3. Leer y parsear el archivo polar generado
         results = self._parse_polar_file(polar_file)
+        print(f"[XFOIL Diagnostic] Polar parsed successfully: {results is not None} (points: {len(results['alpha']) if results else 0})")
         
         # Limpiamos los archivos temporales generados
         self._cleanup_temp_files(airfoil_file, polar_file)
