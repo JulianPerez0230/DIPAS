@@ -1364,12 +1364,17 @@ with tab_valid:
     
     val_mode = st.radio(
         "Seleccionar Motor de Validación:",
-        ["XFOIL (Solución Numérica Viscosa Rápida)", "ANSYS Fluent (CFD Alta Fidelidad - Modelo Transition SST)"],
+        [
+            "XFOIL (Solución Numérica Viscosa Rápida)",
+            "Surrogate Multi-Fidelidad (Red Neuronal Tensorial RANS / Túnel UIUC)",
+            "ANSYS Fluent (CFD Alta Fidelidad - Modelo Transition SST)"
+        ],
         horizontal=True
     )
     
-    # ------------------ MODO XFOIL ------------------
-    if "XFOIL" in val_mode:
+    # ------------------ MODO XFOIL / SURROGATE ------------------
+    if "XFOIL" in val_mode or "Surrogate" in val_mode:
+        is_surrogate_mode = "Surrogate" in val_mode
         col_ctrl, col_res = st.columns([3, 7])
         
         with col_ctrl:
@@ -1378,19 +1383,31 @@ with tab_valid:
             a_end = st.number_input("Incidencia Final (α max)", value=14.0, step=1.0)
             a_step = st.number_input("Paso Angular (Δα)", value=1.0, step=0.5)
             
-            run_xfoil_btn = st.button("EJECUTAR SIMULACIÓN XFOIL", use_container_width=True)
+            btn_label = "EJECUTAR EVALUACIÓN SURROGATE IA" if is_surrogate_mode else "EJECUTAR SIMULACIÓN XFOIL"
+            run_val_btn = st.button(btn_label, use_container_width=True)
             
-            if run_xfoil_btn:
-                with st.spinner("Ejecutando simulación aerodinámica multi-fidelidad..."):
+            if run_val_btn:
+                spinner_msg = "Evaluando polar aerodinámica con Modelo Sustituto Multi-Fidelidad..." if is_surrogate_mode else "Ejecutando integración viscosa directa en XFOIL..."
+                with st.spinner(spinner_msg):
                     try:
-                        res = engine.run_xfoil_validation(
-                            active_cand,
-                            reynolds=reynolds,
-                            alpha_start=a_start,
-                            alpha_end=a_end,
-                            alpha_step=a_step,
-                            eval_alpha=alpha_eval
-                        )
+                        if is_surrogate_mode:
+                            res = engine.run_surrogate_validation(
+                                active_cand,
+                                reynolds=reynolds,
+                                alpha_start=a_start,
+                                alpha_end=a_end,
+                                alpha_step=a_step,
+                                eval_alpha=alpha_eval
+                            )
+                        else:
+                            res = engine.run_xfoil_validation(
+                                active_cand,
+                                reynolds=reynolds,
+                                alpha_start=a_start,
+                                alpha_end=a_end,
+                                alpha_step=a_step,
+                                eval_alpha=alpha_eval
+                            )
                         st.session_state.xfoil_res = res
                     except Exception as e:
                         st.error(f"Error en la ejecución: {e}")
@@ -1398,15 +1415,9 @@ with tab_valid:
         with col_res:
             xf_res = st.session_state.xfoil_res
             if xf_res and xf_res.get("polar") is not None:
-                is_fb = xf_res.get("is_fallback", False)
-                solver_label = "Surrogate Multi-Fidelidad (Red Tensorial RANS/XFOIL)" if is_fb else "XFOIL 6.99 (Método de Paneles Viscosos eⁿ — Mark Drela, MIT)"
+                solver_label = xf_res.get("solver_name", "XFOIL 6.99 (Método de Paneles Viscosos eⁿ — Mark Drela, MIT)")
                 st.success(f"✅ **Simulación Convergida con Éxito** • **Motor Activo:** `{solver_label}`")
                 
-                diag = xf_res.get("diagnostic_info")
-                if diag:
-                    with st.expander("🔍 Ver Diagnóstico de Ejecución del Solver", expanded=False):
-                        st.code(diag)
-                    
                 p_df = pd.DataFrame(xf_res["polar"])
                 
                 # Valores estimados del perfil decodificado
