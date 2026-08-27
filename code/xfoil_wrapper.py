@@ -88,13 +88,16 @@ class XFoilWrapper:
         """
         Ejecuta la simulación en XFOIL y extrae la curva polar de coeficientes.
         """
-        airfoil_file = self.write_airfoil_file(x, y_upper, y_lower, f"{file_prefix}_airfoil.dat")
-        polar_file = f"{file_prefix}_polar.txt"
-        input_file = f"{file_prefix}_input.txt"
+        airfoil_file = os.path.abspath(self.write_airfoil_file(x, y_upper, y_lower, f"{file_prefix}_airfoil.dat"))
+        polar_file = os.path.abspath(f"{file_prefix}_polar.txt")
+        work_dir = os.path.dirname(polar_file)
         
         # Si existe una polar anterior, la borramos para evitar interferencias
         if os.path.exists(polar_file):
-            os.remove(polar_file)
+            try:
+                os.remove(polar_file)
+            except Exception:
+                pass
             
         # 1. Escribir la lista de comandos que le inyectaremos a XFOIL
         commands = [
@@ -131,23 +134,25 @@ class XFoilWrapper:
                 stderr=subprocess.PIPE,
                 text=True,
                 timeout=35,
+                cwd=work_dir,
                 env=env
             )
-            print(f"[XFOIL Diagnostic] Executable: {self.xfoil_path}")
-            print(f"[XFOIL Diagnostic] Command: {cmd}")
-            print(f"[XFOIL Diagnostic] ReturnCode: {process.returncode}")
+            import sys
+            print(f"[XFOIL Diagnostic] Executable: {self.xfoil_path}", flush=True)
+            print(f"[XFOIL Diagnostic] Command: {cmd}", flush=True)
+            print(f"[XFOIL Diagnostic] ReturnCode: {process.returncode}", flush=True)
             if process.stderr:
-                print(f"[XFOIL Diagnostic] STDERR: {process.stderr.strip()}")
+                print(f"[XFOIL Diagnostic] STDERR: {process.stderr.strip()}", flush=True)
             if process.stdout:
-                print(f"[XFOIL Diagnostic] STDOUT Sample: {process.stdout[:300].strip()}")
+                print(f"[XFOIL Diagnostic] STDOUT Sample: {process.stdout[:300].strip()}", flush=True)
         except subprocess.TimeoutExpired:
-            print("Aviso: XFOIL alcanzó tiempo límite, extrayendo puntos calculados...")
+            print("Aviso: XFOIL alcanzó tiempo límite, extrayendo puntos calculados...", flush=True)
         except Exception as e:
-            print(f"Aviso: Error ejecutando subproceso XFOIL: {e}")
+            print(f"Aviso: Error ejecutando subproceso XFOIL: {e}", flush=True)
             
         # 3. Leer y parsear el archivo polar generado
         results = self._parse_polar_file(polar_file)
-        print(f"[XFOIL Diagnostic] Polar parsed successfully: {results is not None} (points: {len(results['alpha']) if results else 0})")
+        print(f"[XFOIL Diagnostic] Polar parsed successfully: {results is not None} (points: {len(results['alpha']) if results else 0})", flush=True)
         
         # Limpiamos los archivos temporales generados
         self._cleanup_temp_files(airfoil_file, polar_file)
@@ -214,12 +219,15 @@ class XFoilWrapper:
         """
         Ejecuta XFOIL para un ángulo de ataque específico y extrae la distribución de presiones Cp(x).
         """
-        airfoil_file = self.write_airfoil_file(x, y_upper, y_lower, f"{file_prefix}_cp_airfoil.dat")
-        cp_file = f"{file_prefix}_cp.txt"
-        input_file = f"{file_prefix}_cp_input.txt"
+        airfoil_file = os.path.abspath(self.write_airfoil_file(x, y_upper, y_lower, f"{file_prefix}_cp_airfoil.dat"))
+        cp_file = os.path.abspath(f"{file_prefix}_cp.txt")
+        work_dir = os.path.dirname(cp_file)
         
         if os.path.exists(cp_file):
-            os.remove(cp_file)
+            try:
+                os.remove(cp_file)
+            except Exception:
+                pass
             
         commands = [
             "plop",
@@ -248,6 +256,7 @@ class XFoilWrapper:
                 stderr=subprocess.PIPE,
                 text=True,
                 timeout=15,
+                cwd=work_dir,
                 env=env
             )
         except Exception:
