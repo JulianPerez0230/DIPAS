@@ -1393,7 +1393,9 @@ with tab_valid:
         with col_res:
             xf_res = st.session_state.xfoil_res
             if xf_res and xf_res.get("polar") is not None:
-                st.success("✅ **Simulación Aerodinámica Viscosa Convergida con Éxito** (Integración de Capa Límite, Fuerzas $C_L, C_D, C_m$ y Presiones $C_p$).")
+                is_fb = xf_res.get("is_fallback", False)
+                solver_label = "Surrogate Multi-Fidelidad (Red Tensorial RANS/XFOIL)" if is_fb else "XFOIL 6.99 (Método de Paneles Viscosos eⁿ — Mark Drela, MIT)"
+                st.success(f"✅ **Simulación Convergida con Éxito** • **Motor Activo:** `{solver_label}`")
                     
                 p_df = pd.DataFrame(xf_res["polar"])
                 
