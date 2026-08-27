@@ -648,6 +648,11 @@ if "engine" not in st.session_state:
     st.session_state.engine = DIPASEngine()
 else:
     st.session_state.engine.__class__ = DIPASEngine
+    if getattr(st.session_state.engine, "xfoil", None) is None:
+        try:
+            st.session_state.engine.xfoil = XFoilWrapper()
+        except Exception:
+            pass
     if not hasattr(st.session_state.engine, "_precision_loaded"):
         st.session_state.engine._init_surrogate()
         st.session_state.engine._precision_loaded = True
