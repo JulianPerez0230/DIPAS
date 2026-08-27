@@ -9,17 +9,39 @@ class XFoilWrapper:
         Wrapper de Python para automatizar simulaciones 2D en XFOIL.
         Soporta ejecución en Windows (xfoil.exe local) y entornos Linux / Cloud (/usr/bin/xfoil).
         """
-        if xfoil_path is None or xfoil_path == "xfoil.exe":
-            script_dir = os.path.dirname(os.path.abspath(__file__))
-            local_exe = os.path.join(script_dir, "xfoil.exe")
-            if os.path.exists(local_exe):
-                xfoil_path = local_exe
+        resolved_path = None
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        local_exe = os.path.join(script_dir, "xfoil.exe")
+
+        # 1. En entornos Linux / Cloud (Streamlit Community Cloud), buscar binario nativo ELF
+        if os.name != 'nt':
+            if shutil.which("xfoil"):
+                resolved_path = shutil.which("xfoil")
+            elif os.path.exists("/usr/bin/xfoil"):
+                resolved_path = "/usr/bin/xfoil"
+            elif os.path.exists("/usr/local/bin/xfoil"):
+                resolved_path = "/usr/local/bin/xfoil"
+
+        # 2. En entornos Windows o fallback
+        if resolved_path is None:
+            if xfoil_path and os.path.exists(xfoil_path) and not (os.name != 'nt' and xfoil_path.endswith('.exe')):
+                resolved_path = os.path.abspath(xfoil_path)
+            elif os.name == 'nt' and os.path.exists(local_exe):
+                resolved_path = local_exe
             elif shutil.which("xfoil"):
-                xfoil_path = shutil.which("xfoil")
+                resolved_path = shutil.which("xfoil")
             else:
-                xfoil_path = local_exe
-            
-        self.xfoil_path = os.path.abspath(xfoil_path) if os.path.exists(xfoil_path) else xfoil_path
+                resolved_path = local_exe
+
+        self.xfoil_path = resolved_path
+        
+        # En Linux dar permisos de ejecución si es ruta a archivo
+        if os.name != 'nt' and os.path.exists(self.xfoil_path):
+            try:
+                os.chmod(self.xfoil_path, 0o755)
+            except Exception:
+                pass
+
         if not os.path.exists(self.xfoil_path) and not shutil.which(str(self.xfoil_path)):
             raise FileNotFoundError(f"No se encontró el ejecutable de XFOIL en: {self.xfoil_path}")
 

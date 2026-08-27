@@ -50,9 +50,11 @@ class DIPASEngine:
         self.surrogate_model = None
         self.surrogate_scalers = None
         
-        # Inicializar wrapper XFOIL
-        xfoil_exe = self.code_dir / "xfoil.exe"
-        self.xfoil = XFoilWrapper(xfoil_path=str(xfoil_exe)) if xfoil_exe.exists() else None
+        # Inicializar wrapper XFOIL multiplataforma (Windows/Linux)
+        try:
+            self.xfoil = XFoilWrapper()
+        except Exception:
+            self.xfoil = None
         
         # Cargar Surrogate por defecto si existe
         self._init_surrogate()
