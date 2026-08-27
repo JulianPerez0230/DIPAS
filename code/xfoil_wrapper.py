@@ -7,15 +7,22 @@ class XFoilWrapper:
     def __init__(self, xfoil_path=None):
         """
         Wrapper de Python para automatizar simulaciones 2D en XFOIL.
-        Soporta ejecución en Windows (xfoil.exe local) y entornos Linux / Cloud (/usr/bin/xfoil).
+        Soporta ejecución en Windows (xfoil.exe local) y entornos Linux / Cloud (xfoil_linux o /usr/bin/xfoil).
         """
         resolved_path = None
         script_dir = os.path.dirname(os.path.abspath(__file__))
         local_exe = os.path.join(script_dir, "xfoil.exe")
+        local_linux = os.path.join(script_dir, "xfoil_linux")
 
-        # 1. En entornos Linux / Cloud (Streamlit Community Cloud), buscar binario nativo ELF
+        # 1. En entornos Linux / Cloud (Streamlit Community Cloud)
         if os.name != 'nt':
-            if shutil.which("xfoil"):
+            if os.path.exists(local_linux):
+                resolved_path = local_linux
+                try:
+                    os.chmod(local_linux, 0o777)
+                except Exception:
+                    pass
+            elif shutil.which("xfoil"):
                 resolved_path = shutil.which("xfoil")
             elif os.path.exists("/usr/bin/xfoil"):
                 resolved_path = "/usr/bin/xfoil"
@@ -38,7 +45,7 @@ class XFoilWrapper:
         # En Linux dar permisos de ejecución si es ruta a archivo
         if os.name != 'nt' and os.path.exists(self.xfoil_path):
             try:
-                os.chmod(self.xfoil_path, 0o755)
+                os.chmod(self.xfoil_path, 0o777)
             except Exception:
                 pass
 
