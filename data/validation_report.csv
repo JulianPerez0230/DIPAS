@@ -1,0 +1,7 @@
+perfil_dipas,perfil_uiuc,re_dipas,re_uiuc,rango_alpha,MAE_CL,MAE_CD
+e387,E387,100000,99865,confiable<=8deg,0.27978,
+e387,E387,100000,99865,completo<=12deg,0.37429,
+e387,E387,150000,151600,confiable<=8deg,,0.564507
+e387,E387,150000,151600,completo<=12deg,,0.701956
+e387,E387,200000,199970,confiable<=8deg,0.30465,
+e387,E387,200000,199970,completo<=12deg,0.39569,

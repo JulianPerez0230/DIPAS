@@ -1,0 +1,56 @@
+\documentclass[12pt,a4paper]{article}
+
+% --- Paquetes Recomendados ---
+\usepackage[utf8]{inputenc}
+\usepackage[spanish,es-tabla]{babel}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{geometry}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{cite}
+\usepackage{microtype}
+
+% --- Configuración de Página ---
+\geometry{left=3cm, right=3cm, top=2.5cm, bottom=2.5cm}
+
+% --- Configuración de Enlaces ---
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    filecolor=magenta,      
+    urlcolor=cyan,
+    pdftitle={DIPAS: Diseño Inverso de Perfiles Aerodinámicos},
+    pdfpagemode=FullScreen,
+}
+
+% --- Metadatos del Documento ---
+\title{\textbf{DIPAS: Sistema de Diseño Generativo Inverso de Perfiles Aerodinámicos mediante CVAE y Validación Experimental}}
+\author{\textbf{Julián} \\ \small Facultad de Ingeniería}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Este trabajo presenta el desarrollo de DIPAS (DIseño de Perfiles AeroDinámicos Inverso), una metodología generativa basada en un Autoencoder Variacional Condicional (CVAE) para el diseño inverso de perfiles alares 2D en régimen subsónico incompresible. A diferencia de las metodologías tradicionales de optimización iterativa, el sistema propuesto mapea de forma directa las características de performance deseadas (coeficientes aerodinámicos y espesor relativo) a una geometría válida parametrizada mediante CST. El entrenamiento se realiza bajo un esquema multificidad combinando miles de simulaciones rápidas de XFOIL con datos RANS de alta fidelidad de AirfRANS. Finalmente, se propone una validación experimental en túnel de viento para cuantificar el salto entre la simulación numérica y la física real.
+\end{abstract}
+
+\newpage
+\tableofcontents
+\newpage
+
+% --- Secciones del Documento ---
+\include{sections/01_introduction}
+\include{sections/02_methodology}
+\include{sections/03_results}
+\include{sections/03_wind_tunnel}
+
+\newpage
+\bibliographystyle{IEEEtran}
+\bibliography{references}
+
+\end{document}

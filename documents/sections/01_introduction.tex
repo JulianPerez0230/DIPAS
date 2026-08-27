@@ -1,0 +1,16 @@
+\section{Introducción}
+\label{sec:introduccion}
+
+El diseño aerodinámico de perfiles alares ha seguido tradicionalmente un enfoque directo, donde un diseñador propone una geometría inicial (por ejemplo, perfiles parametrizados de la serie NACA) y posteriormente evalúa su comportamiento mediante herramientas de mecánica de fluidos computacional (CFD) o ensayos experimentales. Este ciclo directo es inherentemente iterativo, lo que genera cuellos de botella significativos cuando se buscan óptimos locales bajo múltiples restricciones físicas.
+
+\subsection{Objetivo del Proyecto}
+El proyecto \textbf{DIPAS} (Diseño Inverso de Perfiles Aerodinámicos) tiene como objetivo subvertir este paradigma mediante el uso de aprendizaje profundo generativo. El usuario define un conjunto de objetivos de performance aerodinámica (tales como sustentación, resistencia y restricciones de espesor relativo a un número de Reynolds dado) y el modelo generativo genera de forma directa las coordenadas geométricas del perfil alar óptimo.
+
+\subsection{Alcance y Límites del Trabajo}
+Para garantizar la viabilidad técnica y experimental del proyecto, se delimitan los siguientes límites operativos:
+\begin{itemize}
+    \item \textbf{Dimensión}: Análisis estrictamente bidimensional (2D), ignorando efectos de envergadura finita o interacciones con fuselajes.
+    \item \textbf{Régimen}: Subsónico e incompresible. El modelo se diseña para números de Reynolds moderados y bajos, típicos de vehículos aéreos no tripulados (UAVs) y aviación general ligera.
+    \item \textbf{Flujo}: Estacionario, despreciando efectos dinámicos como desprendimiento dinámico o inestabilidades de capa límite transitorias.
+\end{itemize}
+Estos límites se definen formalmente como el marco conceptual del presente trabajo y no como omisiones de diseño.

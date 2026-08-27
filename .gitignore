@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.py[cod]
+*.class
+*.so
+.Python
+env/
+venv/
+.venv/
+
+# Fluent & Mesh logs
+*.trn
+*.log
+cleanup-fluent-*
+*.jou
+
+# Scratch / IDE
+.vscode/
+.idea/
+.gemini/
+scratch/
+
+# Large raw dataset caches
+data/raw_unifoil/
+archive/

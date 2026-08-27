@@ -1,0 +1,35 @@
+\section{Configuración Experimental y Validación}
+\label{sec:validacion}
+
+El aporte diferencial de DIPAS radica en la cuantificación empírica de la brecha entre la simulación y la realidad. Una vez que el CVAE ha sido entrenado y genera perfiles óptimos para misiones específicas, se seleccionará la geometría más prometedora para su fabricación y ensayo.
+
+\subsection{Parámetros de Diseño y Restricciones Físicas}
+Basándose en las capacidades físicas del laboratorio y el túnel de viento, se adoptan los siguientes valores de referencia para el dimensionamiento del modelo de prueba y el acondicionamiento geométrico:
+\begin{table}[htbp]
+\centering
+\caption{Supuestos técnicos y limitaciones operativas para el modelo de validación.}
+\label{tab:supuestos_tunel}
+\begin{tabular}{lll}
+\toprule
+\textbf{Parámetro} & \textbf{Valor Asumido} & \textbf{Origen / Justificación} \\
+\midrule
+Cuerda del modelo ($c$) & $200\text{ mm}$ & Ensayo 2D en sección de ensayo típica \\
+Velocidad del aire ($V$) & $10\text{ a }30\text{ m/s}$ & Caracterización operativa del túnel \\
+Rango de Reynolds ($Re$) & $\sim 130.000\text{ a }400.000$ & Aire a $20^\circ\text{C}$ con $c=200\text{ mm}$ \\
+Instrumentación principal & Balanza de fuerzas y tomas de $C_p$ & Sensores piezoeléctricos discretos \\
+Espesor mín. borde de fuga & $0,6\text{ mm}$ & Límite de fabricación por impresión FDM \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Validación de Presión Discreta ($C_p$)}
+Además de contrastar los coeficientes globales integrados ($C_L, C_D$), se propone extraer la distribución espacial discreta de los coeficientes de presión ($C_p$) obtenidos de la simulación CFD RANS (AirfRANS) en las coordenadas relativas de cuerda ($x/c$) donde se encuentran ubicados físicamente los sensores de presión piezoeléctricos del modelo. Esta validación puntual permite detectar localmente fenómenos como la posición de la burbuja de laminación y el punto de transición del flujo sin necesidad de entrenar al CVAE con campos de flujo completos.
+
+\subsection{Preguntas Técnicas a Validar con la Cátedra}
+Para cerrar los supuestos de la Tabla~\ref{tab:supuestos_tunel}, se plantea el siguiente cuestionario técnico para discutir con el cuerpo docente de Aerodinámica II:
+\begin{enumerate}
+    \item \textbf{Efectos de Bloqueo}: ¿Es adecuado el tamaño de cuerda de $200\text{ mm}$ para evitar el bloqueo del túnel en ensayos bidimensionales con paneles laterales?
+    \item \textbf{Rango de Ensayos}: ¿Cuál es la velocidad óptima para obtener lecturas estables en la balanza mecánica/digital sin exceder las cargas estructurales de los soportes?
+    \item \textbf{Tomas de Presión y Maquetado}: ¿Qué número de sensores piezoeléctricos se disponen y en qué coordenadas exactas de cuerda ($x/c$) están ubicadas las tomas? ¿Debemos diseñar la geometría con conductos internos en CAD para acoplar tomas metálicas durante la impresión 3D?
+    \item \textbf{Eje de Soporte}: ¿Cuál es el sistema de anclaje físico del modelo al marco del túnel (por ejemplo, barra pasante o soportes laterales) y a qué distancia de la cuerda se localiza el eje de cabeceo?
+\end{enumerate}
