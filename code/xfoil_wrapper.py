@@ -102,9 +102,6 @@ class XFoilWrapper:
             
         # 1. Escribir la lista de comandos que le inyectaremos a XFOIL
         commands = [
-            "plop",                  # Entrar al menú de opciones de graficación (Plot Options)
-            "g",                     # Desactivar gráficos (toggle graphics)
-            "",                      # Salir de plop
             f"load {airfoil_file}",  # Cargar el archivo de coordenadas
             "pane",                  # Repanelar superficie para convergencia óptima
             "oper",                  # Entrar al menú de operaciones
@@ -232,9 +229,6 @@ class XFoilWrapper:
                 pass
             
         commands = [
-            "plop",
-            "g",
-            "",
             f"load {airfoil_file}",
             "oper",
             f"visc {reynolds}",
