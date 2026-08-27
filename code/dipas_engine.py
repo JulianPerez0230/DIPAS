@@ -53,7 +53,9 @@ class DIPASEngine:
         # Inicializar wrapper XFOIL multiplataforma (Windows/Linux)
         try:
             self.xfoil = XFoilWrapper()
-        except Exception:
+            print(f"[DIPAS Init] XFOIL Wrapper inicializado exitosamente: {self.xfoil.xfoil_path}")
+        except Exception as e:
+            print(f"[DIPAS Init] Advertencia: XFOIL no inicializado: {e}")
             self.xfoil = None
         
         # Cargar Surrogate por defecto si existe
@@ -362,6 +364,7 @@ class DIPASEngine:
 
     def run_xfoil_validation(self, candidate, reynolds=200000, alpha_start=-4.0, alpha_end=14.0, alpha_step=1.0, eval_alpha=3.0):
         """Ejecuta una corrida de polar y Cp con XFOIL, con respaldo continuo multi-fidelidad."""
+        print(f"[DIPAS Validation] Iniciando simulación XFOIL. Wrapper path: {self.xfoil.xfoil_path if self.xfoil else 'None'}")
         polar_df = None
         cp_data = None
         cp_alpha = float(eval_alpha)

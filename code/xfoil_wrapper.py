@@ -16,16 +16,16 @@ class XFoilWrapper:
 
         # 1. En entornos Linux / Cloud (Streamlit Community Cloud)
         if os.name != 'nt':
-            if os.path.exists(local_linux):
+            if os.path.exists("/usr/bin/xfoil"):
+                resolved_path = "/usr/bin/xfoil"
+            elif shutil.which("xfoil"):
+                resolved_path = shutil.which("xfoil")
+            elif os.path.exists(local_linux):
                 resolved_path = local_linux
                 try:
                     os.chmod(local_linux, 0o777)
                 except Exception:
                     pass
-            elif shutil.which("xfoil"):
-                resolved_path = shutil.which("xfoil")
-            elif os.path.exists("/usr/bin/xfoil"):
-                resolved_path = "/usr/bin/xfoil"
             elif os.path.exists("/usr/local/bin/xfoil"):
                 resolved_path = "/usr/local/bin/xfoil"
 
